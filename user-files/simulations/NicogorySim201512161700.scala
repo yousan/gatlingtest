@@ -11,8 +11,8 @@ class NicogorySim201512161700 extends Simulation {
   val baseURL = ""
 
   // urls to be attacked
-  var url1 = "/"
-  var url2 = "/my_page"
+  var url1 = "http://example.com/"
+  var url2 = "http://example.com/xmlrpc.php"
 
   val httpProtocol = http
     .baseURL(baseURL)
@@ -23,22 +23,27 @@ class NicogorySim201512161700 extends Simulation {
     "Upgrade-Insecure-Requests" -> "1")
 
   val scn = scenario("NicogorySim201512161700")
-    .exec(
+    .repeat(5, "n") {
+    exec(
       http("request_root")
-        .get(url1)
-        .headers(headers_0)
-    )
-    .pause(1)
-    .exec(
-      http("request_my_page")
         .get(url2)
         .headers(headers_0)
     )
+  }
+    .pause(1)
+    .exec(
+    http("request_my_page")
+      .post(url2)
+      .headers(headers_0)
+      .body(ElFileBody("post.xml")).asXML
+  )
 
   setUp(
     scn.inject(
-      constantUsersPerSec(100) during(10 seconds)
+      constantUsersPerSec(1) during(10 seconds)
     )
   ).protocols(httpProtocol)
 
 }
+
+
